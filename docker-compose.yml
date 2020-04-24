@@ -1,0 +1,22 @@
+---
+version: '3'
+services:
+  bot:
+    image: yaakov/reviewbot:latest
+    build: .
+    restart: always
+    links:
+      - postgres
+    environment:
+      - SLACK_BOT_USER_TOKEN=${SLACK_BOT_USER_TOKEN}
+
+  postgres:
+    image:  reviewbot/postgres 
+    restart: always
+    build:
+      dockerfile: Dockerfile.postgres
+      context: .
+    environment:
+      - POSTGRES_PASSWORD
+    ports:
+      - "5432:5432"
