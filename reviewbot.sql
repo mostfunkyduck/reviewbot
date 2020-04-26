@@ -1,7 +1,6 @@
-CREATE USER reviewbot WITH PASSWORD 'yaakov';
-CREATE DATABASE reviewbot;
-GRANT ALL PRIVILEGES ON DATABASE reviewbot TO reviewbot;
-
-CREATE TABLE reviews(
-  reviewtext  varchar
+GRANT ALL PRIVILEGES ON DATABASE postgres TO postgres;
+CREATE TABLE IF NOT EXISTS reviews(
+  id      SERIAL PRIMARY KEY,
+  author  varchar,
+  text    varchar
 )
