@@ -54,7 +54,7 @@ class Bot:
 
             add <review author> <review information>: adds a review to the list, with an author for reference purposes
 
-            list: shows all reviews currently in motion
+            list [<author>]: shows reviews currently in motion
 
             remove <review ID>: removes a review from the list
         """
