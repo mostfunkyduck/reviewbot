@@ -24,8 +24,8 @@ class Bot:
 
         return self.db.store_review(r)
 
-    def retrieve_reviews(self):
-        return [r for r in self.db.retrieve_reviews()]
+    def retrieve_reviews(self, author=None):
+        return [r for r in self.db.retrieve_reviews(author)]
 
     def remove_review_by_key(self, key):
         return self.db.remove_review(key)
@@ -40,8 +40,8 @@ class Bot:
         bot.store_review(text=" ".join(text), author=author)
         return "review for {author} added, use list to see its ID" 
 
-    def list(self):
-        return "\n".join([str(r) for r in self.retrieve_reviews()])
+    def list(self, author=None):
+        return "\n".join([str(r) for r in self.retrieve_reviews(author)])
 
     def remove(self, key):
         self.db.remove_review(key)
@@ -127,7 +127,7 @@ def process_message(**payload):
             if command == "add":
                 message = bot.add(arguments)
             elif command == "list":
-                message = bot.list()
+                message = bot.list(arguments)
             elif command == "remove":
                 message = bot.remove(arguments)
             elif command == "help":

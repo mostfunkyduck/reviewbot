@@ -26,8 +26,12 @@ class PGDriver:
         # if there's a problem, we're currently just spitting out the exception
         self.execute_query(f"DELETE FROM reviews WHERE id = '{key}';")
 
-    def retrieve_reviews(self):
-        results = self.execute_query(f'SELECT id, text, author FROM reviews;', True)
+    def retrieve_reviews(self, author=None):
+        query = "SELECT id, text, author FROM reviews"
+        if author:
+            query = query + f" WHERE author = '{author}'"
+        logging.debug(f"running query: [{query}]")
+        results = self.execute_query(query, True)
         logging.debug(f"retrieve_reviews results: {results}")
         for r in results:
             logging.debug(f"retrieve_reviews got record: [{r}]")
