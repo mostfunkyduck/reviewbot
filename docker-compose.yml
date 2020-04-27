@@ -8,7 +8,8 @@ services:
     links:
       - postgres
     environment:
-      - SLACK_BOT_USER_TOKEN=${SLACK_BOT_USER_TOKEN}
+      - SLACK_BOT_USER_TOKEN
+      - POSTGRES_PASSWORD
 
   postgres:
     image:  reviewbot/postgres 

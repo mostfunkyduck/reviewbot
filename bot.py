@@ -2,11 +2,14 @@ import os
 import db
 import re
 import logging
+import traceback
 from slack import RTMClient
 
 class Bot:
     def __init__(self):
-        self.db = db.PGDriver()
+        # this is the same environment variable that postgres uses, so you only
+        # need to pass it once to compose
+        self.db = db.PGDriver(password=os.environ["POSTGRES_PASSWORD"])
         self.userid = None
         slack_token = os.environ["SLACK_BOT_USER_TOKEN"]
         self.rtm_client = RTMClient(token=slack_token)
@@ -19,13 +22,16 @@ class Bot:
     def store_review(self, **kwargs):
         r = db.Review(
             text=kwargs["text"],
-            author=kwargs["author"]
+            tag=kwargs["tag"]
         )
 
         return self.db.store_review(r)
 
-    def retrieve_reviews(self, author=None):
-        return [r for r in self.db.retrieve_reviews(author)]
+    def retrieve_reviews(self, tag=None):
+        results = self.db.retrieve_reviews(tag)
+        if not results:
+            return None
+        return results
 
     def remove_review_by_key(self, key):
         return self.db.remove_review(key)
@@ -35,13 +41,17 @@ class Bot:
     def add(self, message):
         # quick and dirty way to do it, could also use regex backcaptures, but I hate regexes
         components = message.split(" ")
-        author = components[0]
+        tag = components[0]
         text = components[1:]
-        bot.store_review(text=" ".join(text), author=author)
-        return "review for {author} added, use list to see its ID" 
+        bot.store_review(text=" ".join(text), tag=tag)
+        return f"review tagged with '{tag}' added, use list to see its ID" 
 
-    def list(self, author=None):
-        return "\n".join([str(r) for r in self.retrieve_reviews(author)])
+    def list(self, tag=None):
+        results = [str(r) for r in self.retrieve_reviews(tag)]
+        logging.debug(f"retrieved list results {results}")
+        if not results:
+            return f"no results for tag '{tag}'!"
+        return "\n".join(results)
 
     def remove(self, key):
         self.db.remove_review(key)
@@ -52,9 +62,9 @@ class Bot:
         I am a reviewbot, I help with reviews. Isn't that nice of me?
         Currently, I respond to the following commands when tagged:
 
-            add <review author> <review information>: adds a review to the list, with an author for reference purposes
+            add <tag> <review information>: adds a review to the list, with an author for reference purposes
 
-            list [<author>]: shows reviews currently in motion
+            list [<tag>]: shows reviews currently in motion
 
             remove <review ID>: removes a review from the list
         """
@@ -134,7 +144,7 @@ def process_message(**payload):
                 message = bot.help()
 
         except Exception as e:
-            message = f'something bad happened :freakout: : {str(e)}'
+            message = f'something bad happened :freakout: : {traceback.format_exc()}'
 
         logging.debug(f"{payload}")
         if message:
