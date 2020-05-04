@@ -15,14 +15,13 @@ class Bot:
         self.rtm_client = RTMClient(token=slack_token)
 
     # if we don't call this separately, the 'open' command will be processed
-    # before the bot finishes initializing 
+    # before the bot finishes initializing
     def start(self):
         self.rtm_client.start()
 
     def store_review(self, **kwargs):
         r = db.Review(
-            text=kwargs["text"],
-            tag=kwargs["tag"]
+            text=kwargs["text"]
         )
 
         return self.db.store_review(r)
@@ -40,17 +39,50 @@ class Bot:
     # parses out the review
     def add(self, message):
         # quick and dirty way to do it, could also use regex backcaptures, but I hate regexes
+        self.store_review(text=message)
+        return f"review added, use list to see its ID"
+
+    def tag(self, message):
         components = message.split(" ")
-        tag = components[0]
-        text = components[1:]
-        bot.store_review(text=" ".join(text), tag=tag)
-        return f"review tagged with '{tag}' added, use list to see its ID" 
+        subcommand = components[0]
+
+        if subcommand == "add":
+            if len(components[1:]) != 1:
+                return f"invalid syntax: '{message}' had the wrong # of arguments ({len(components[1:])})"
+            t = db.Tag(name=components[1])
+            self.db.store_tag(t)
+            return f"added tag {t.name}"
+        elif subcommand == "apply":
+            if len(components[1:]) != 2:
+                return f"invalid syntax: '{message}' had the wrong # of arguments ({len(components[1:])})"
+            review_id = components[1]
+            tag_name = components[2]
+            # is this a real tag?
+            tag = self.db.retrieve_tag(tag_name)
+            if not tag:
+                return f"I can't find a tag named {tag_name}!"
+
+            # OK, it's real, is this review real?
+            review = self.db.retrieve_review(review_id)
+            if not review:
+                return f"I can't find a review with the ID {review_id}!"
+
+            self.db.tag_review(review=review, tag=tag)
+            return f"tagged review #{review.key} with {tag.name}"
+        elif subcommand == "list":
+            tags = [str(t) for t in self.db.retrieve_tags()]
+            if not tags:
+                return "I don't have any tags"
+            return "\n".join(tags)
 
     def list(self, tag=None):
         results = [str(r) for r in self.retrieve_reviews(tag)]
         logging.debug(f"retrieved list results {results}")
         if not results:
-            return f"no results for tag '{tag}'!"
+            if tag:
+                return f"no results for tag '{tag}'!"
+            return f"no results!"
+
         return "\n".join(results)
 
     def remove(self, key):
@@ -59,15 +91,28 @@ class Bot:
 
     def help(self):
         return """
-        I am a reviewbot, I help with reviews. Isn't that nice of me?
-        Currently, I respond to the following commands when tagged:
+I am a reviewbot, I help with reviews. Isn't that nice of me?
+Currently, I respond to the following commands when tagged:
 
-            add <tag> <review information>: adds a review to the list, with an author for reference purposes
+    ### Review commands
+    Basic commands for manipulating reviews
 
-            list [<tag>]: shows reviews currently in motion
+    add <review information>: adds a review to the list
 
-            remove <review ID>: removes a review from the list
-        """
+    list [<tag>]: shows reviews currently in motion, optionally limited to just those with a given tag
+
+    remove <review ID>: removes a review from the list
+
+    ### Tag commands
+    Tags are used to identify reviews for search purposes
+
+    tag list: shows all valid tags
+
+    tag apply <review ID> <tag name>: sets the tag on a given review, both the review and the tag must be valid
+
+    tag add <tag name>: creates a new tag with a given name
+
+"""
 
     # takes original payload, picks out what it needs, sends it to the channel
     # current sending as a thread response
@@ -113,9 +158,9 @@ def process_message(**payload):
     logging.debug(f"received payload: [{payload}]")
     logging.debug(data)
 
-    
+
     if "text" not in data:
-        return 
+        return
 
     if "subtype" in data and data["subtype"] == "bot_message":
         logging.info("received bot message, not responding")
@@ -125,10 +170,10 @@ def process_message(**payload):
         # just for fun
         bot.rtm_client.typing(channel=payload["channel"])
 
-    if text: 
+    if text:
         logging.debug("received a non-bot message, responding")
-        
-        # split it up by spaces to pick out author 
+
+        # split it up by spaces to pick out author
         contents = text.replace(f'<@{bot.userid}> ', '').split(" ")
         command = contents[0]
         arguments = " ".join(contents[1:])
@@ -140,17 +185,19 @@ def process_message(**payload):
                 message = bot.list(arguments)
             elif command == "remove":
                 message = bot.remove(arguments)
+            elif command == "tag":
+                message = bot.tag(arguments)
             elif command == "help":
                 message = bot.help()
 
-        except Exception as e:
+        except Exception:
             message = f'something bad happened :freakout: : {traceback.format_exc()}'
 
         logging.debug(f"{payload}")
         if message:
             bot.send_message(
                 channel=data["channel"],
-                ts=data["ts"], 
+                ts=data["ts"],
                 web_client=payload["web_client"],
                 message=message
             )

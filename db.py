@@ -1,14 +1,21 @@
 import psycopg2
 import logging
 
+class Tag:
+    def __repr__(self):
+        return f"{self.name}"
+
+    def __init__(self, **kwargs):
+        self.name = kwargs["name"]
+
 class Review:
     def __repr__(self):
-        return f"{self.key}: ({self.tag}): {self.text}"
+        return f"{self.key}: ({self.tag or '<no tags>'}): {self.text}"
 
     def __init__(self, **kwargs):
         self.key    = kwargs.get("key")
         self.text   = kwargs["text"]
-        self.tag    = kwargs["tag"]
+        self.tag    = kwargs.get("tag")
 
 
 class PGDriver:
@@ -18,8 +25,23 @@ class PGDriver:
         logging.info("connection established to database")
 
     def store_review(self, review):
-        values = (review.tag, review.text)
-        self.execute_query(f"INSERT INTO reviews (tag, text) VALUES(%s, %s);", values)
+        values = (review.text,)
+        self.execute_query(f"INSERT INTO reviews (text) VALUES(%s);", values)
+
+    def retrieve_review(self, key):
+        results = self.execute_query(f"SELECT id, text, tag FROM reviews WHERE id = %s", (key,), True)
+        if not results:
+            logging.debug(f"retrieve_review returning None when querying for review #{key}")
+            return None
+
+        if len(results) >  1:
+            raise Exception(f"uh, wth? there are multiple results for review ID #{key}, which is supposed to be a primary key!")
+
+        return Review(
+            key=results[0][0],
+            text=results[0][1],
+            tag=results[0][2]
+        )
 
     def remove_review(self, key):
         if not key:
@@ -48,6 +70,33 @@ class PGDriver:
                 tag=r[2]
             )
 
+    def tag_review(self, **kwargs):
+        review = kwargs["review"]
+        tag = kwargs["tag"]
+
+        self.execute_query("UPDATE reviews SET tag = %s WHERE id = %s;", (tag.name,review.key,))
+
+
+    def store_tag(self, tag):
+        self.execute_query("INSERT INTO tags (name) VALUES(%s);", (tag.name,))
+
+    def retrieve_tags(self):
+        results = self.execute_query("SELECT name FROM tags;", (), True)
+        if not results:
+            return None
+        for result in results:
+            yield Tag(name=result[0])
+
+    def retrieve_tag(self, name):
+        results = self.execute_query("select name from tags where name = %s", (name,), True)
+        if not results:
+            return None
+
+        if len(results) > 1:
+            raise Exception("hrm, got multiple results when querying for a tag named {name}, which is supposed to be a primary key")
+
+        t = Tag(name=results[0][0])
+        return t
     def execute_query(self, query, values, returnResults=False):
         ret = None
         cursor = self.conn.cursor()
