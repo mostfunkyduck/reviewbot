@@ -92,26 +92,29 @@ class Bot:
     def help(self):
         return """
 I am a reviewbot, I help with reviews. Isn't that nice of me?
+
 Currently, I respond to the following commands when tagged:
 
-    ### Review commands
-    Basic commands for manipulating reviews
+### Review commands
+Basic commands for manipulating reviews
 
-    add <review information>: adds a review to the list
+add <review information>: adds a review to the list
 
-    list [<tag>]: shows reviews currently in motion, optionally limited to just those with a given tag
+list [<tag>]: shows reviews currently in motion, optionally limited to just those with a given tag
 
-    remove <review ID>: removes a review from the list
+remove <review ID>: removes a review from the list
 
-    ### Tag commands
-    Tags are used to identify reviews for search purposes
+### Tag commands
+Tags are used to identify reviews for search purposes
 
-    tag list: shows all valid tags
+tag list: shows all valid tags
 
-    tag apply <review ID> <tag name>: sets the tag on a given review, both the review and the tag must be valid
+tag apply <review ID> <tag name>: sets the tag on a given review, both the review and the tag must be valid
 
-    tag add <tag name>: creates a new tag with a given name
+tag add <tag name>: creates a new tag with a given name
 
+### Contributing
+Want to have some fun and add some crap to the bot? https://github.com/mostfunkyduck/reviewbot
 """
 
     # takes original payload, picks out what it needs, sends it to the channel
