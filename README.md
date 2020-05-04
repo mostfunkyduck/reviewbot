@@ -23,7 +23,5 @@ There aren't any tests currently, but when developing, call all the basic comman
 # Future improvements
 
 1. formatting sucks
-1. "author" seems to be more useful as a general tag, for instance a team or a channel
-1. currently list() always lists all, it should default to only list for the current channel, meaning that reviews should also be automatically marked by channel
-1. if the above happens, "list all" should still dump the full list
-1. add a "tag" command to add or remove tags from reviews
+1. multiple tags per review
+1. add optional syntax to tag a user or users on review completion (something like "@reviewbot followup add <review ID> <user handle>")
