@@ -25,3 +25,4 @@ There aren't any tests currently, but when developing, call all the basic comman
 1. formatting sucks
 1. multiple tags per review
 1. add optional syntax to tag a user or users on review completion (something like "@reviewbot followup add <review ID> <user handle>")
+1. add requested reviewers to a review, which means that a user can say "@reviewbot mine" and get back all reviews waiting on them
