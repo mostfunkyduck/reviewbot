@@ -5,6 +5,8 @@ import logging
 import traceback
 from slack import RTMClient
 
+# This class models a bot, it implements all the commands and interacts with the 
+# db class as necessary
 class Bot:
     def __init__(self):
         # this is the same environment variable that postgres uses, so you only
@@ -38,7 +40,6 @@ class Bot:
     # given the message sent to the bot with the leading tag and command stripped
     # parses out the review
     def add(self, message):
-        # quick and dirty way to do it, could also use regex backcaptures, but I hate regexes
         self.store_review(text=message)
         return f"review added, use list to see its ID"
 
@@ -92,6 +93,9 @@ class Bot:
     def help(self):
         return """
 I am a reviewbot, I help with reviews. Isn't that nice of me?
+
+*All my commands work in DM, try `@reviewbot <something>` in a message*
+*This is preferable for most commands to avoid spam*
 
 Currently, I respond to the following commands when tagged:
 
@@ -176,7 +180,8 @@ def process_message(**payload):
     if text:
         logging.debug("received a non-bot message, responding")
 
-        # split it up by spaces to pick out author
+        # split it up by spaces to pick out author, could also use a regex, but
+        # I hate regexes
         contents = text.replace(f'<@{bot.userid}> ', '').split(" ")
         command = contents[0]
         arguments = " ".join(contents[1:])
@@ -194,7 +199,7 @@ def process_message(**payload):
                 message = bot.help()
 
         except Exception:
-            message = f'something bad happened :freakout: : {traceback.format_exc()}'
+            message = f'something bad happened!! :freakout: : {traceback.format_exc()}'
 
         logging.debug(f"{payload}")
         if message:

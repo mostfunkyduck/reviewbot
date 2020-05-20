@@ -1,6 +1,10 @@
 import psycopg2
 import logging
 
+# each of the data classes implements __repr__ to produce a string version
+# for output
+
+# Models a tag for the DB
 class Tag:
     def __repr__(self):
         return f"{self.name}"
@@ -8,6 +12,7 @@ class Tag:
     def __init__(self, **kwargs):
         self.name = kwargs["name"]
 
+# Models a review for the DB
 class Review:
     def __repr__(self):
         return f"{self.key}: ({self.tag or '<no tags>'}): {self.text}"
@@ -18,6 +23,7 @@ class Review:
         self.tag    = kwargs.get("tag")
 
 
+# Translates between data classes and queries
 class PGDriver:
     def __init__(self, **kwargs):
         password  = kwargs["password"]
