@@ -210,7 +210,7 @@ def process_message(**payload):
                 message=message
             )
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.ERROR)
 logging.info("starting bot")
 bot = Bot()
 bot.start()
