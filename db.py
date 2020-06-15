@@ -54,7 +54,7 @@ class PGDriver:
             raise Exception("you moron, you passed a null key to PGDriver.remove_review()")
 
         # if there's a problem, we're currently just spitting out the exception
-        self.execute_query(f"DELETE FROM reviews WHERE id = %s;", (key))
+        self.execute_query(f"DELETE FROM reviews WHERE id = %s;", (key,))
 
     def retrieve_reviews(self, tag=None):
         query = "SELECT id, text, tag FROM reviews"
