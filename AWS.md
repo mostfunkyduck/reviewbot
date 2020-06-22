@@ -8,4 +8,4 @@
  1. `SLACK_BOT_USER_TOKEN` (user token from slack)
  1. These should all be done in SSM to avoid compromising sekrits
 
-All of this is currently set up in relab, look for resources in the above services with the 'reviewbot' namespace
+
